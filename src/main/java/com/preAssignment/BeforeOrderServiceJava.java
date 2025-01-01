@@ -2,6 +2,8 @@ package com.preAssignment;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class BeforeOrderServiceJava {
 
@@ -9,6 +11,8 @@ public class BeforeOrderServiceJava {
     private final Map<String, Integer> productDatabase = new HashMap<>();
     // 가장 최근 주문 정보를 저장하는 DB
     private final Map<String, OrderInfo> latestOrderDatabase = new HashMap<>();
+
+    private final Lock lock = new ReentrantLock();
 
     public BeforeOrderServiceJava() {
         // 초기 상품 데이터
@@ -33,6 +37,30 @@ public class BeforeOrderServiceJava {
                     " - CurrentStock : " + currentStock + " - Order : " + amount);
             productDatabase.put(productName, currentStock - amount);
             latestOrderDatabase.put(productName, new OrderInfo(productName, amount, System.currentTimeMillis()));
+        }
+    }
+
+    /**
+        synchronized 키워드를 이용한 동시성 제어 처리
+     */
+    public synchronized void orderSync(String productName, int amount) {
+        order(productName, amount);
+    }
+    public void orderSyncObject(String productName, int amount) {
+        synchronized (this) {
+            order(productName, amount);
+        }
+    }
+
+    /**
+        ReentrantLock 을 이용한 동시성 제어 처리
+     */
+    public void orderReentLock(String productName, int amount) {
+        lock.lock();                        // 락 획득
+        try  {
+            order(productName, amount);     // 주문 시도
+        } finally {
+            lock.unlock();                  // 락 해제
         }
     }
 
